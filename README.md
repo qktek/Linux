@@ -1,1 +1,1 @@
-# Infomation from Linux share for free.
+# Infomation from CentOS, Ubuntu share for free.
