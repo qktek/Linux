@@ -1,5 +1,5 @@
 Yum Repository on CentOS 7
-vim /etc/yum.repos.d/local-repos.repo
+# vim /etc/yum.repos.d/local-repos.repo
 #  yum repolist
 OR
 # yum repolist all
