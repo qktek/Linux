@@ -1,8 +1,15 @@
 Service Fail2Ban
+
 - tar -xf archive.tar.gz
 Also, to extract in a specific directory
 for eg. to extract the archive into a custom my_images directory .
 tar -xvzf community_images.tar.gz -C my_images
+wget https://example.com/file.rpm
+yum localinstall https://example.com/file.rpm
+sudo dnf install https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+sudo rpm -ivh https://example.com/file.rpm
+sudo yum install google-chrome-stable_current_x86_64.rpm
+
 
 Install offline
 
@@ -12,3 +19,5 @@ https://fedoraproject.org/wiki/EPEL
 # tar -xvfj fail2ban-x.x.x.tar.bz
 # cd fail2ban-x.x.x
 # python setup.py install
+copy file backup
+cp /etc/fail2ban/fail2ban.conf /etc/fail2ban/fail2ban.local
