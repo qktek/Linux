@@ -1,1 +1,14 @@
 Service Fail2Ban
+- tar -xf archive.tar.gz
+Also, to extract in a specific directory
+for eg. to extract the archive into a custom my_images directory .
+tar -xvzf community_images.tar.gz -C my_images
+
+Install offline
+
+https://www.fail2ban.org/wiki/index.php/Downloads
+https://fedoraproject.org/wiki/EPEL
+
+# tar -xvfj fail2ban-x.x.x.tar.bz
+# cd fail2ban-x.x.x
+# python setup.py install
