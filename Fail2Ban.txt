@@ -21,3 +21,19 @@ https://fedoraproject.org/wiki/EPEL
 # python setup.py install
 copy file backup
 cp /etc/fail2ban/fail2ban.conf /etc/fail2ban/fail2ban.local
+
+- Trên CentOS
+
+Đảm bảo hệ thống của bạn được cập nhật 
+#yum update && yum install epel-release
+Cài đặt Fail2ban
+# yum install fail2ban
+Cài đặt sendmail nếu muốn cảnh báo qua Email
+#yum install sendmail
+Kích hoạt và start Fail2ban
+# systemctl start fail2ban
+# systemctl enable fail2ban
+Nếu start gặp lỗi “no directory /var/run/fail2ban to contain the socket file /var/run/fail2ban/fail2ban.sock” thì gõ lệnh sau:
+mkdir /var/run/fail2ban
+
+
