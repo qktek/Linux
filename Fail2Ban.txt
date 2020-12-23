@@ -33,6 +33,8 @@ Cài đặt sendmail nếu muốn cảnh báo qua Email
 Kích hoạt và start Fail2ban
 # systemctl start fail2ban
 # systemctl enable fail2ban
+# systemctl status fail2ban
+# systemctl restart fail2ban
 Nếu start gặp lỗi “no directory /var/run/fail2ban to contain the socket file /var/run/fail2ban/fail2ban.sock” thì gõ lệnh sau:
 mkdir /var/run/fail2ban
 
