@@ -3,3 +3,37 @@ Yum Repository on CentOS 7
 #  yum repolist
 OR
 # yum repolist all
+
+After successful installation, the packages are deleted from the cache. 
+To retain the cached packages, change the keepcache setting to 1 in the /etc/yum.conf file as follows:
+
+# vi /etc/yum.conf
+keepcache = 1
+Cleaning the Yum Cache
+Clean the Yum cache to reclaim disk space or to clear errors due to corrupted metadata files. To remove cached packages only, use:
+
+# yum clean packages
+To delete metadata for each enabled repository, use the following command:
+
+# yum clean metadata
+To delete package headers, use the following command:
+
+# yum clean headers
+To clean all cached information, use the following command:
+
+# yum clean all
+If you get the message “Metadata file does not match checksum” during a Yum operation, clearing the metadata from the cache might not help. In this case, adding the following line to /etc/yum.conf resolves the problem:
+
+# vi /etc/yum.conf
+http_caching=none
+Changing default location of yum cache
+Sometimes when the default yum cache location is full, you would get an error while installing any yum package.
+
+insufficient space in download directory /var/cache/yum/rhel-x86_64-server-6/packages
+As the /var filesystem where yum cache is located is full and there is no disk space for yum to download the system updates, the above error will be shown.
+
+The yum cache location is configured in /etc/yum.conf file as cachedir option in the [main] section and can be changed:
+
+$ cat /etc/yum.conf 
+[main]
+cachedir=/var/cache/yum/$basearch/$releasever
