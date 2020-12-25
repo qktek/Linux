@@ -1,3 +1,20 @@
+# uname -a
+# cat /etc/redhat-release
+# asterisk -vrrr
+# cat 
+check log
+# tailf /var/log/asterisk/full
+
+
+
+########################
+NetworkManager
+check
+# rpm -qa | grep  NetworkManager
+# yum install NetworkManager-tui
+# nmtui
+# nmtui edit eht0
+#########################
 Yum Repository on CentOS 7
 # vim /etc/yum.repos.d/local-repos.repo
 #  yum repolist
@@ -37,3 +54,4 @@ The yum cache location is configured in /etc/yum.conf file as cachedir option in
 $ cat /etc/yum.conf 
 [main]
 cachedir=/var/cache/yum/$basearch/$releasever
+
