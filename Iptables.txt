@@ -165,3 +165,179 @@ Hoặc
 iptables: Saving firewall rules to /etc/sysconfig/iptables:[ OK ]
 Về cơ bản, bài viết hướng dẫn các bạn những điều cơ bản nhất để sử dụng Iptables như 1 tường lửa trong các VPS linux, đủ cho 1 website thông thường hay email server. 
 Tuy vậy, vẫn còn rất nhiều điều có thể làm với Iptables. Mong rằng, bài hướng dẫn này sẽ cung cấp cho các bạn sự bảo mật cơ bản cho VPS
+
+##########################
+Install IPTABLES
+
+- Flush all current rules from iptables
+# iptables -F
+- Check
+$ rpm -q iptables
+iptables-1.4.7-5.1.el6_2.x86_64
+And to see if iptables is actually running, we can check that the iptables modules are loaded and use the -L switch to inspect the currently loaded rules:
+# lsmod | grep ip_tables
+ip_tables              29288  1 iptable_filter
+x_tables               29192  6 ip6t_REJECT,ip6_tables,ipt_REJECT,xt_state,xt_tcpudp,ip_tables
+
+Default
+# iptables -L
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+ACCEPT     all  --  anywhere             anywhere            state RELATED,ESTABLISHED 
+ACCEPT     icmp --  anywhere             anywhere            
+ACCEPT     all  --  anywhere             anywhere            
+ACCEPT     tcp  --  anywhere             anywhere            state NEW tcp dpt:ssh 
+REJECT     all  --  anywhere             anywhere            reject-with icmp-host-prohibited 
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+REJECT     all  --  anywhere             anywhere            reject-with icmp-host-prohibited 
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination  
+
+- Writing a Simple Rule Set
+ArtWork/WikiDesign/icon-admonition-attention.png
+IMPORTANT: At this point we are going to clear the default rule set. If you are connecting remotely to a server via SSH for this tutorial then there is a very real possibility that you could lock yourself out of your machine. You must set the default input policy to accept before flushing the current rules, and then add a rule at the start to explicitly allow yourself access to prevent against locking yourself out.
+We will use an example based approach to examine the various iptables commands. In this first example, we will create a very simple set of rules to set up a Stateful Packet Inspection (SPI) firewall that will allow all outgoing connections but block all unwanted incoming connections:
+
+# iptables -P INPUT ACCEPT
+# iptables -F
+# iptables -A INPUT -i lo -j ACCEPT
+# iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+# iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+# iptables -P INPUT DROP
+# iptables -P FORWARD DROP
+# iptables -P OUTPUT ACCEPT
+# iptables -L -v
+which should give the following output:
+
+Chain INPUT (policy DROP 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+    0     0 ACCEPT     all  --  lo     any     anywhere             anywhere
+    0     0 ACCEPT     all  --  any    any     anywhere             anywhere            state RELATED,ESTABLISHED
+    0     0 ACCEPT     tcp  --  any    any     anywhere             anywhere            tcp dpt:ssh
+Chain FORWARD (policy DROP 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Interfaces
+In our previous example, we saw how we could accept all packets incoming on a particular interface, in this case the localhost interface:
+
+iptables -A INPUT -i lo -j ACCEPT
+Suppose we have 2 separate interfaces, eth0 which is our internal LAN connection and ppp0 dialup modem (or maybe eth1 for a nic) which is our external internet connection. We may want to allow all incoming packets on our internal LAN but still filter incoming packets on our external internet connection. We could do this as follows:
+
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -i eth0 -j ACCEPT
+But be very careful - if we were to allow all packets for our external internet interface (for example, ppp0 dialup modem):
+
+iptables -A INPUT -i ppp0 -j ACCEPT
+we would have effectively just disabled our firewall!
+
+- IP Addresses
+Opening up a whole interface to incoming packets may not be restrictive enough and you may want more control as to what to allow and what to reject. Lets suppose we have a small network of computers that use the 192.168.0.x private subnet. We can open up our firewall to incoming packets from a single trusted IP address (for example, 192.168.0.4):
+
+# Accept packets from trusted IP addresses
+ iptables -A INPUT -s 192.168.0.4 -j ACCEPT # change the IP address as appropriate
+Breaking this command down, we first append (-A) a rule to the INPUT chain for the source (-s) IP address 192.168.0.4 to ACCEPT all packets (also note how we can use the # symbol to add comments inline to document our script with anything after the # being ignored and treated as a comment).
+
+Obviously if we want to allow incoming packets from a range of IP addresses, we could simply add a rule for each trusted IP address and that would work fine. But if we have a lot of them, it may be easier to add a range of IP addresses in one go. To do this, we can use a netmask or standard slash notation to specify a range of IP address. For example, if we wanted to open our firewall to all incoming packets from the complete 192.168.0.x (where x=1 to 254) range, we could use either of the following methods:
+
+# Accept packets from trusted IP addresses
+ iptables -A INPUT -s 192.168.0.0/24 -j ACCEPT  # using standard slash notation
+ iptables -A INPUT -s 192.168.0.0/255.255.255.0 -j ACCEPT # using a subnet mask
+Finally, as well as filtering against a single IP address, we can also match against the MAC address for the given device. To do this, we need to load a module (the mac module) that allows filtering against mac addresses. Earlier we saw another example of using modules to extend the functionality of iptables when we used the state module to match for ESTABLISHED and RELATED packets. Here we use the mac module to check the mac address of the source of the packet in addition to it's IP address:
+
+# Accept packets from trusted IP addresses
+ iptables -A INPUT -s 192.168.0.4 -m mac --mac-source 00:50:8D:FD:E6:32 -j ACCEPT
+First we use -m mac to load the mac module and then we use --mac-source to specify the mac address of the source IP address (192.168.0.4). You will need to find out the mac address of each ethernet device you wish to filter against. Running ifconfig (or iwconfig for wireless devices) as root will provide you with the mac address.
+This may be useful for preventing spoofing of the source IP address as it will allow any packets that genuinely originate from 192.168.0.4 (having the mac address 00:50:8D:FD:E6:32) but will block any packets that are spoofed to have come from that address. Note, mac address filtering won't work across the internet but it certainly works fine on a LAN.
+
+- Ports and Protocols
+Above we have seen how we can add rules to our firewall to filter against packets matching a particular interface or a source IP address. This allows full access through our firewall to certain trusted sources (host PCs). Now we'll look at how we can filter against protocols and ports to further refine what incoming packets we allow and what we block.
+Before we can begin, we need to know what protocol and port number a given service uses. For a simple example, lets look at bittorrent. Bittorrent uses the tcp protocol on port 6881, so we would need to allow all tcp packets on destination port (the port on which they arrive at our machine) 6881:
+
+# Accept tcp packets on destination port 6881 (bittorrent)
+ iptables -A INPUT -p tcp --dport 6881 -j ACCEPT
+Here we append (-A) a rule to the INPUT chain for packets matching the tcp protocol (-p tcp) and entering our machine on destination port 6881 (--dport 6881).
+Note: In order to use matches such as destination or source ports (--dport or --sport), you must first specify the protocol (tcp, udp, icmp, all).
+We can also extend the above to include a port range, for example, allowing all tcp packets on the range 6881 to 6890:
+# Accept tcp packets on destination ports 6881-6890
+ iptables -A INPUT -p tcp --dport 6881:6890 -j ACCEPT
+- Putting It All Together
+Now we've seen the basics, we can start combining these rules.
+- Accept tcp packets on destination port 22 (SSH)
+# iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+This will open up port 22 (SSH) to all incoming tcp connections which poses a potential security threat as hackers could try brute force cracking on accounts with weak passwords. However, if we know the IP addresses of trusted remote machines that will be used to log on using SSH, we can limit access to only these source IP addresses. For example, if we just wanted to open up SSH access on our private lan (192.168.0.x), we can limit access to just this source IP address range:
+- Accept tcp packets on destination port 22 (SSH) from private LAN
+# iptables -A INPUT -p tcp -s 192.168.0.0/24 --dport 22 -j ACCEPT
+
+- Check Iptables status
+# service iptables status
+# service iptables start
+# service iptables stop
+– Khởi động Iptables cùng hệ thống
+# chkconfig iptables on
+
+# iptables -L -v
+# iptables -L -n -v
+# service iptables save
+# service iptables restart
+
+Example
+
+BLOCK ALL CONNECT
+# iptables -A INPUT -s 5.182.209.29 -j DROP
+# iptables -I INPUT -s 5.182.209.0/24 -j DROP
+iptables -A INPUT -m state --state NEW -m tcp -p tcp --dport ***** -j ACCEPT
+# Accept tcp packets on destination ports 6881-6890
+ iptables -A INPUT -p tcp --dport 6881:6890 -j ACCEPT
+
+# Accept tcp packets on destination port 22 (SSH)
+ iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+# Accept tcp packets on destination port 22 (SSH) from private LAN
+ iptables -A INPUT -p tcp -s 192.168.11.0/26 --dport 22 -j ACCEPT
+ 
+# Accept packets from trusted IP addresses
+ iptables -A INPUT -s 192.168.0.4 -m mac --mac-source 00:50:8D:FD:E6:32 -j ACCEPT 
+---
+# iptables -A FORWARD -p icmp -j ACCEPT
+# iptables -A INPUT -p icmp -j ACCEPT
+# iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+# iptables -I INPUT -p tcp --dport 443 -j ACCEPT
+# iptables -I INPUT -p udp -m udp --dport 5060 -j ACCEPT
+# iptables -I INPUT -p udp -m udp --dport 10000:20000 -j ACCEPT 
+# iptables -I INPUT -p udp -m udp --dport 10000:65000 -j ACCEPT
+
+- Mail allow port
+# iptables -A INPUT -p tcp -m tcp --dport 25 -j ACCEPT
+# iptables -A INPUT -p tcp -m tcp --dport 465 -j ACCEPT
+# iptables -A INPUT -p tcp -m tcp --dport 110 -j ACCEPT
+# iptables -A INPUT -p tcp -m tcp --dport 995 -j ACCEPT
+# iptables -A INPUT -p tcp -m tcp --dport 143 -j ACCEPT
+# iptables -A INPUT -p tcp -m tcp --dport 993 -j ACCEPT
+# iptables -A INPUT -p tcp -m tcp --dport 587 -j ACCEPT
+
+################################################################ 
+# Generated by iptables-save v1.4.21 on Sun Dec 20 10:44:37 2020
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [62:10802]
+-A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+-A INPUT -p udp -m udp --dport 10000:20000 -j ACCEPT
+-A INPUT -p udp -m udp --dport 5060 -j ACCEPT
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT
+# Completed on Sun Dec 20 10:44:37 2020
+------------------------------------------------------------------
+##################################################################
+ 
+
