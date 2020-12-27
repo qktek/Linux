@@ -10,9 +10,7 @@ sudo dnf install https://dl.google.com/linux/direct/google-chrome-stable_current
 sudo rpm -ivh https://example.com/file.rpm
 sudo yum install google-chrome-stable_current_x86_64.rpm
 
-
 Install offline
-
 https://www.fail2ban.org/wiki/index.php/Downloads
 https://fedoraproject.org/wiki/EPEL
 
@@ -23,9 +21,9 @@ copy file backup
 cp /etc/fail2ban/fail2ban.conf /etc/fail2ban/fail2ban.local
 
 - Trên CentOS
-
 Đảm bảo hệ thống của bạn được cập nhật 
 #yum update && yum install epel-release
+
 Cài đặt Fail2ban
 # yum install fail2ban
 Cài đặt sendmail nếu muốn cảnh báo qua Email
@@ -38,4 +36,80 @@ Kích hoạt và start Fail2ban
 Nếu start gặp lỗi “no directory /var/run/fail2ban to contain the socket file /var/run/fail2ban/fail2ban.sock” thì gõ lệnh sau:
 mkdir /var/run/fail2ban
 
+#################################
+Install - Service Fail2Ban
+
+# yum update && yum install epel-release
+# yum install -y fail2ban fail2ban-firewalld fail2ban-systemd
+# yum install -y fail2ban whois
+
+- Enable and start fail2ban.service
+# systemctl enable fail2ban.service
+Created symlink from /etc/systemd/system/multi-user.target.wants/fail2ban.service to /usr/lib/systemd/system/fail2ban.service.
+# systemctl start fail2ban.service
+- Understanding fail2ban Configuration Files
+fail2ban configurations are exist in /etc/fail2ban/ and /etc/fail2ban/jail.d/.
+fail2ban reads *.conf files first and then reads *.local files. Therefore, all settings in *.conf files are override by the settings in *.local files.
+Thus, it is a best practice to create a custom jail.local file instead of editing the default jail.conf file.
+fail2ban provides only a single configuration file /etc/fail2ban/jail.conf with initial configurations. This file contains sample jail configurations of common network services. Therefore, we can simply copy the required section in a jail.local file and enable the jail to apply it.
+
+- Copy the default jail.conf file as jail.local.
+# cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+
+- Configure fail2ban to Secure SSH Service, Asterisk:
+There are many predefined fail2ban jails for sshd service in jail.local. Therefore, we are enabling only one of them as follows.
+# sed -i "/^\[sshd\]/a\\enabled=true" /etc/fail2ban/jail.local
+# sed -i "/^\[asterisk\]/a\\enabled=true" /etc/fail2ban/jail.local
+# systemctl restart fail2ban.service
+
+Check sshd jail status by using fail2ban-client command.
+# fail2ban-client status
+# fail2ban-client status sshd
+# fail2ban-client status asterisk
+
+# vi /etc/fail2ban/jail.local
+
+[DEFAULT]
+# "ignoreip" can be an IP address, a CIDR mask or a DNS host. Fail2ban will not
+# ban a host which matches an address in this list. Several addresses can be
+# defined using space separator.
+ignoreip = 127.0.0.1
+
+# "bantime" is the number of seconds that a host is banned.
+bantime = 600
+# A host is banned if it has generated "maxretry" during the last "findtime"
+# seconds.
+findtime = 600
+# "maxretry" is the number of failures before a host get banned.
+maxretry = 5
+
+Trong đó:
+ignoreip: những địa chỉ IP sẽ được ưu tiên không bị chặn bởi Fai2ban, nếu là danh sách nhiều IP, mỗi IP sẽ được phân cách nhau bằng “khoảng trắng”.
+bantime: khoảng thời gian (giây) chặn địa chỉ IP.
+findtime: khoảng thời gian (giây) một địa chỉ IP phải thực hiện đăng nhập thành công.
+maxretry: số lần tối đa mà máy chủ chấp nhận một địa chỉ IP đăng nhập thất bại.
+
+276 # SSH servers
+279 [sshd]
+280 enabled = true
+282 # To use more aggressive sshd modes set filter parameter "mode" in jail.local:
+283 # normal (default), ddos, extra or aggressive (combines all).
+284 # See "tests/files/logs/sshd" or "filter.d/sshd.conf" for usage example and details.
+285 #mode   = normal
+286 port    = ssh
+287 logpath = %(sshd_log)s
+288 backend = %(sshd_backend)s
+289 maxretry = 3
+290 bantime = 100
+############################
+756 # ASTERISK servers
+758 [asterisk]
+759 enabled=true
+761 action   = %(banaction)s[name=%(__name__)s-tcp, port="%(port)s", protocol="tcp", chain="%(chain)s", actname=%(banaction)s-tcp]
+762            %(banaction)s[name=%(__name__)s-udp, port="%(port)s", protocol="udp", chain="%(chain)s", actname=%(banaction)s-udp]
+763            %(mta)s-whois[name=%(__name__)s, dest="%(destemail)s"]
+764 logpath  = /var/log/asterisk/full
+765 maxretry = 4
+766 #findtime = 600
+767 bantime  = 100
 
