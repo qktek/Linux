@@ -4,8 +4,12 @@
 # cat 
 check log
 # tailf /var/log/asterisk/full
-
-
+########################
+# hostnamectl set-hostname mail
+# echo "192.168.0.14  mail.centos7.lan  mail " >> /etc/hosts
+# cat /etc/hosts
+# ping -c1 mail.centos7.lan
+# ping -c1 mail
 
 ########################
 NetworkManager
