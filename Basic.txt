@@ -38,6 +38,10 @@ SELINUXTYPE=targeted
 # restart to apply new setting
 [root@dlp ~]# reboot
 
+Tat firewall  :
+# sed -i -e s,'SELINUX=enforcing','SELINUX=disabled', /etc/selinux/config
+# reboot
+
 ###
 
 
