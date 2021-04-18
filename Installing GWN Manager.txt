@@ -19,6 +19,16 @@ example the version used is 1.0.19.8.
 # firewall-cmd --zone=public --add-port=8443/tcp –permanent
 # firewall-cmd --zone=public --add-port=10014/tcp –permanent
 # firewall-cmd --reload
+
+for example, add TCP 465 permanently
+# firewall-cmd --add-port=465/tcp --permanent
+firewall-cmd --zone=public --add-port=8443/tcp --permanent
+firewall-cmd --zone=public --add-port=10014/tcp --permanent
+success
+# firewall-cmd --reload
+success
+# firewall-cmd --list-port
+
 Note: By default, GWN Manager use port 8443 for web service (nginx) and port 10014 for gateway
 communication separately.
 
