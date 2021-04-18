@@ -3,27 +3,27 @@ Installing GWN Manager
 # yum -y groupinstall core base "Development Tools"
 
 1) First, we start with installing package dependencies using below commands:
-yum install epel-release
-yum install jemalloc libaio glibc-devel fontconfig xorg-x11-font-utils freetype
+# yum install epel-release
+# yum install jemalloc libaio glibc-devel fontconfig xorg-x11-font-utils freetype
 
 2) After downloading the bundled package from the link: https://www.grandstream.com/support/firmware
-wget http://firmware.grandstream.com/GWN_Manager-1.0.19.8.tar.gz
+# wget http://firmware.grandstream.com/GWN_Manager-1.0.19.8.tar.gz
 You will need to uncompressing it using the command below:
-tar -zxvf GWN_Manager-1.0.0.13-201912121121.tar.gz
+# tar -zxvf GWN_Manager-1.0.19.8.tar.gz
 
 3) Then install all packages, and replace the version number according to your package, in our
-example the version used is 1.0.0.13.
-rpm -ivh gwn*1.0.0.13*.rpm
+example the version used is 1.0.19.8.
+# rpm -ivh gwn*1.0.19.8*.rpm
 
 3. Add firewall exceptions:
-firewall-cmd --zone=public --add-port=8443/tcp –permanent
-firewall-cmd --zone=public --add-port=10014/tcp –permanent
-firewall-cmd --reload
+# firewall-cmd --zone=public --add-port=8443/tcp –permanent
+# firewall-cmd --zone=public --add-port=10014/tcp –permanent
+# firewall-cmd --reload
 Note: By default, GWN Manager use port 8443 for web service (nginx) and port 10014 for gateway
 communication separately.
 
 4. Run the script to start the services:
-/gwn/gwn start
+# /gwn/gwn start
 
 – Use /etc/rc.d/rc.local
 This method is valid even for systemd-based distributions. In order for this method to work, you must grant execute permissions to /etc/rc.d/rc.local as follows:
@@ -33,11 +33,11 @@ This method is valid even for systemd-based distributions. In order for this met
 #!/bin/bash
 # THIS FILE IS ADDED FOR COMPATIBILITY PURPOSES
 touch /var/lock/subsys/local
-/gwn/gwn start
-iptables -xvn -L
+# /gwn/gwn start
+# iptables -xvn -L
 To see if a program or process is listening on a port, ready to accept a packet, use the netstat command.
 
-netstat -tulnp
+# netstat -tulnp
 
 
 /gwn/gwn/nginx/access.log
