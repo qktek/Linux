@@ -1,0 +1,92 @@
+How To Install Postfix CentOS 7
+
+- Step 1: Checking And Removing Sendmail (Required Only If Sendmail Is Installed)
+
+Input: Run the below command to check whether sendmail is installed or not:
+# rpm -qa | grep sendmail
+If you didn’t get any output that means you don’t have sendmail installed and you are good to skip to step 2.
+# yum remove sendmail*
+
+- Step 2: Install Postfix
+
+You can check if postfix centos 7 is already installed or not using the below command:
+# rpm -qa | grep postfix
+In case Postfix is not installed, then use the below command to install postfix:
+# yum install postfix
+
+- Step 3: Configure Postfix.
+
+We need to edit /etc/postfix/main.cf file.
+# vim /etc/postfix/main.cf
+Make changes according to the below steps.
+Note: Mostly you will find the line which needs to be changed on line 67.
+Add hostname to the file by unhashing and editing at line no 75
+# myhostname = smtp.example.local
+Uncomment and set domain name at line no 83
+# mydomain = example.local
+Uncomment line no 99
+# myorigin = $mydomain
+Uncomment and Set ipv4 at line no 113
+# inet_interfaces = all
+edit line no 119 to all
+# inet_protocols = all
+Comment at line no 164
+# #mydestination = $myhostname, localhost.$mydomain, localhost,
+Uncomment and add IP range at line no 264
+# mynetworks = 192.168.1.0/24, 127.0.0.0/8
+Uncomment at line no 419
+# home_mailbox = Maildir/
+save and exit the file.
+Enable the service using the below command
+# systemctl enable postfix
+Start/restart the postfix service.
+# systemctl restart postfix
+# systemctl status postfix
+
+Or add
+
+myhostname = hostname.example.com
+relayhost = [smtp.gmail.com]:587
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_tls_CAfile = /etc/ssl/certs/ca-bundle.crt
+smtp_sasl_security_options = noanonymous
+smtp_sasl_tls_security_options = noanonymous
+
+- Options
+
+myhostname = smtp.dits.vn
+mydomain = dits.vn
+myorigin = $mydomain
+inet_interfaces = all
+#inet_interfaces = localhost
+mydestination = $myhostname, localhost, $mydomain
+mynetworks = 127.0.0.0/8, /32
+relay_domains = $mydestination
+home_mailbox = Maildir/
+
+
+- Configure Postfix SASL Credentials
+
+Create file /etc/postfix/sasl_passwd
+# vi /etc/postfix/sasl_passwd
+# [smtp.gmail.com]:587 username:password
+Example: [smtp.gmail.com]:587 support@dits.vn:password
+    username: là địa chỉ email dùng để gửi mail
+    password: là password của email dùng để gửi mail
+- Add permission 
+# postmap /etc/postfix/sasl_passwd
+# chown root:postfix /etc/postfix/sasl_passwd*
+# chmod 640 /etc/postfix/sasl_passwd*
+# systemctl reload postfix
+
+- Step 4 Add SMTP ports in the firewall to open
+
+#  firewall-cmd –permanent –add-port=25/tcp
+#  firewall-cmd –permanent –add-port=587/tcp
+
+test
+
+tail -500 /var/log/maillog | grep 'postfix'
+
