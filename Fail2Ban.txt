@@ -113,3 +113,8 @@ maxretry: số lần tối đa mà máy chủ chấp nhận một địa chỉ I
 766 #findtime = 600
 767 bantime  = 100
 
+### Bug fix ###
+System status shows “Fail2Ban should always be running”
+then run this to resolve:
+# /var/www/html/admin/modules/sysadmin/hooks/fail2ban-apache-config
+
