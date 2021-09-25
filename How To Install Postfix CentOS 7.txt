@@ -86,7 +86,13 @@ Example: [smtp.gmail.com]:587 support@dits.vn:password
 #  firewall-cmd –permanent –add-port=25/tcp
 #  firewall-cmd –permanent –add-port=587/tcp
 
-test
+## Checking Email Queue
 
-tail -500 /var/log/maillog | grep 'postfix'
+- tail -500 /var/log/maillog | grep 'postfix'
 
+# flush all emails- type
+- postfix flush
+# To see mail queue type
+- mailq
+# To remove all mail from the queue type
+- postsuper -d ALL
