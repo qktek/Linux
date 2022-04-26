@@ -1,0 +1,4 @@
+Check log Opnsense
+# du -hs /var/log/*
+Delete big log
+# rm /var/log/filter/*
