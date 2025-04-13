@@ -1,0 +1,24 @@
+Access Point ( user/pass mặc định ubnt/ubnt )
+Nhập vào : set-inform http:// ip  controller:8080/inform -> enter
+
+# How to install unifi network server on Ubuntu 22
+- Install UniFi Network Servers for Linux
+# https://help.ui.com/hc/en-us/articles/220066768-Updating-and-Installing-Self-Hosted-UniFi-Network-Servers-Linux
+1 - Install required packages before you begin with the following command:
+# sudo apt-get update && sudo apt-get install ca-certificates apt-transport-https
+2 - Use the following command to add a new source list:
+# sudo echo 'deb [ arch=amd64,arm64 ] https://www.ui.com/downloads/unifi/debian stable ubiquiti' | sudo tee /etc/apt/sources.list.d/100-ubnt-unifi.list
+3 - Add the GPG Keys.
+- Method A - Recommended
+Install the following trusted key into
+/etc/apt/trusted.gpg.d
+# sudo wget -O /etc/apt/trusted.gpg.d/unifi-repo.gpg https://dl.ui.com/unifi/unifi-repo.gpg
+- Method B
+Using apt-key:
+# sudo apt-key adv --keyserver keyserver.ubuntu.com --recv 06E85760C0A52C50
+4 -  UniFi Network Server, install MongoDB. For Ubuntu 22.04, 
+- Install MongoDB Community Edition on Ubuntu
+# https://www.mongodb.com/docs/v7.0/tutorial/install-mongodb-on-ubuntu/
+
+5 - Install and upgrade the UniFi Network application with the following command:
+# sudo apt-get update && sudo apt-get install unifi -y
